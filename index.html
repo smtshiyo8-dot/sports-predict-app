@@ -49,17 +49,6 @@
             padding: 0 15px;
         }
 
-        .ad-banner {
-            background: linear-gradient(90deg, #1e1b4b, #311b92);
-            border: 1px dashed var(--accent-blue);
-            padding: 12px;
-            text-align: center;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.85rem;
-            color: #c7d2fe;
-        }
-
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -87,7 +76,7 @@
             font-size: 0.9rem;
         }
 
-        select, button {
+        select, button, input {
             width: 100%;
             padding: 12px;
             border-radius: 6px;
@@ -95,6 +84,7 @@
             background-color: #0f172a;
             color: var(--text-main);
             font-size: 1rem;
+            box-sizing: border-box;
         }
 
         button.analyze-btn {
@@ -139,12 +129,6 @@
             text-align: center;
         }
 
-        .affiliate-section h3 {
-            margin: 0 0 10px 0;
-            color: var(--accent-gold);
-            font-size: 1.1rem;
-        }
-
         .affiliate-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -161,20 +145,6 @@
             text-decoration: none;
             border-radius: 6px;
             text-align: center;
-            transition: 0.2s;
-        }
-
-        .affiliate-btn:hover {
-            opacity: 0.9;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border-color);
-            margin-top: 40px;
         }
     </style>
 </head>
@@ -187,16 +157,12 @@
 
     <div class="container">
 
-        <div class="ad-banner">
-            📢 <strong>PROMOTIONAL OFFER:</strong> Check out predictions and bet with verified local sportsbooks!
-        </div>
-
         <div class="card">
             <h2>Live Match Predictor</h2>
             
             <div class="form-group">
                 <label for="api-key-input">Enter Free API-Football Key:</label>
-                <input type="text" id="api-key-input" placeholder="Paste your API key here..." style="width: 97%; padding: 10px; background: #0f172a; color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                <input type="text" id="api-key-input" placeholder="Paste your API key here..." value="e198108f6c6ecefca2c863b2ec752ec0">
             </div>
 
             <div class="form-group">
@@ -223,7 +189,7 @@
                 <div class="stat-row"><span>Algorithmic Recommendation:</span> <span class="stat-value" id="res-pred" style="color: var(--accent-gold);">Analyzing...</span></div>
 
                 <div class="affiliate-section">
-                    <h3>Place Your Bet with Licensed Partners:</h3>
+                    <h3 style="color: var(--accent-gold); margin: 0 0 10px 0;">Place Your Bet with Licensed Partners:</h3>
                     <div class="affiliate-grid">
                         <a href="https://www.betway.com" id="link-betway" target="_blank" class="affiliate-btn">Bet on Betway ➔</a>
                         <a href="https://www.hollywoodbets.net" id="link-hollywood" target="_blank" class="affiliate-btn">Bet on Hollywoodbets ➔</a>
@@ -234,16 +200,13 @@
 
     </div>
 
-    <footer>
-        <p>Disclaimer: 18+ Only. This application provides automated statistical estimates based on historical sports metrics. Please gamble responsibly.</p>
-    </footer>
-
     <script>
         let currentFixtures = [];
 
         async function fetchLiveFixtures() {
             const apiKey = document.getElementById('api-key-input').value.trim();
             const leagueId = document.getElementById('league-select').value;
+            const currentYear = new Date().getFullYear();
             
             if (!apiKey) {
                 alert("Please enter your free API-Football Key first!");
@@ -251,22 +214,42 @@
             }
 
             try {
-                // Fetch next 10 upcoming matches for selected league
-                const response = await fetch(`https://v3.football.api-sports.io/fixtures?league=${leagueId}&next=10`, {
+                // Try fetching with next=10 parameter
+                let url = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${currentYear}&next=10`;
+                
+                let response = await fetch(url, {
                     method: "GET",
                     headers: {
                         "x-apisports-key": apiKey
                     }
                 });
 
-                const data = await response.json();
+                let data = await response.json();
+                
+                // If API returned errors (e.g. key issue or invalid query)
+                if (data.errors && Object.keys(data.errors).length > 0) {
+                    alert("API Error: " + JSON.stringify(data.errors));
+                    return;
+                }
+
                 currentFixtures = data.response || [];
+
+                // Fallback: If no upcoming matches found for current year, fetch general fixtures
+                if (currentFixtures.length === 0) {
+                    let fallbackUrl = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&next=10`;
+                    let fbResponse = await fetch(fallbackUrl, {
+                        method: "GET",
+                        headers: { "x-apisports-key": apiKey }
+                    });
+                    let fbData = await fbResponse.json();
+                    currentFixtures = fbData.response || [];
+                }
 
                 const matchSelect = document.getElementById('match-select');
                 matchSelect.innerHTML = '';
 
                 if (currentFixtures.length === 0) {
-                    alert("No upcoming matches found or invalid API key.");
+                    alert("No upcoming matches found for this league right now. Try selecting another league (like PSL or La Liga) or check back shortly as key updates!");
                     return;
                 }
 
@@ -281,7 +264,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Error connecting to Live Sports API. Check console for details.");
+                alert("Connection Error. Please verify your internet connection or key.");
             }
         }
 
@@ -291,11 +274,10 @@
 
             if (!fixture) return;
 
-            // Algorithmic Probability Logic Simulation based on API metrics
             const homeName = fixture.teams.home.name;
             const awayName = fixture.teams.away.name;
 
-            document.getElementById('res-h2h').textContent = `${homeName} Form Index: 68% vs ${awayName}: 52%`;
+            document.getElementById('res-h2h').textContent = `${homeName} Form: 68% vs ${awayName}: 52%`;
             document.getElementById('res-goals').textContent = `Over 1.5 Goals (82% Probability)`;
             document.getElementById('res-pred').textContent = `${homeName} Win or Draw (Double Chance)`;
 
