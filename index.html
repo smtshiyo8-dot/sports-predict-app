@@ -215,7 +215,7 @@
 
             try {
                 // Try fetching with next=10 parameter
-                let url = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${currentYear}&next=10`;
+                let url = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=2023&last=10`;
                 
                 let response = await fetch(url, {
                     method: "GET",
