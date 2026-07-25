@@ -87,6 +87,18 @@
             box-sizing: border-box;
         }
 
+        optgroup {
+            background-color: #1e293b;
+            color: var(--accent-blue);
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        option {
+            background-color: #0f172a;
+            color: var(--text-main);
+        }
+
         button.analyze-btn {
             background-color: var(--accent-blue);
             color: #0f172a;
@@ -161,14 +173,38 @@
             <h2>Live Match Predictor</h2>
             
             <div class="form-group">
-                <label for="league-select">Select Global League:</label>
+                <label for="league-select">Select Country & Competition:</label>
                 <select id="league-select">
-                    <option value="PL">English Premier League (UK)</option>
-                    <option value="CL">UEFA Champions League</option>
-                    <option value="PD">Spanish La Liga</option>
-                    <option value="SA">Italian Serie A</option>
-                    <option value="BL1">German Bundesliga</option>
-                    <option value="FL1">French Ligue 1</option>
+                    <optgroup label="🌍 Europe / International">
+                        <option value="CL">UEFA Champions League</option>
+                        <option value="EC">European Championship (Euro)</option>
+                        <option value="WC">FIFA World Cup</option>
+                    </optgroup>
+                    <optgroup label="🇬🇧 England">
+                        <option value="PL">Premier League</option>
+                        <option value="ELC">EFL Championship</option>
+                    </optgroup>
+                    <optgroup label="🇪🇸 Spain">
+                        <option value="PD">La Liga (Primera Division)</option>
+                    </optgroup>
+                    <optgroup label="🇮🇹 Italy">
+                        <option value="SA">Serie A</option>
+                    </optgroup>
+                    <optgroup label="🇩🇪 Germany">
+                        <option value="BL1">Bundesliga</option>
+                    </optgroup>
+                    <optgroup label="🇫🇷 France">
+                        <option value="FL1">Ligue 1</option>
+                    </optgroup>
+                    <optgroup label="🇳🇱 Netherlands">
+                        <option value="DED">Eredivisie</option>
+                    </optgroup>
+                    <optgroup label="🇵🇹 Portugal">
+                        <option value="PPL">Primeira Liga</option>
+                    </optgroup>
+                    <optgroup label="🇧🇷 Brazil">
+                        <option value="BSA">Campeonato Brasileiro Série A</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -277,14 +313,12 @@
                 let totalGoals = 0;
                 let validMatchesCount = 0;
 
-                // Direct match-by-match calculation loop
                 matches.forEach(m => {
                     const score = m.score ? m.score.fullTime : null;
                     if (score && score.home !== null && score.away !== null) {
                         validMatchesCount++;
                         totalGoals += (score.home + score.away);
 
-                        // Determine which team was home/away in that historical match and tabulate result
                         if (m.homeTeam.id === homeId) {
                             if (score.home > score.away) homeWins++;
                             else if (score.away > score.home) awayWins++;
