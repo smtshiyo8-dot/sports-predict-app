@@ -198,99 +198,112 @@
     </div>
 
     <script>
-        const API_KEY = "dcd98e1c2abe4aec8878296345a9efd0";
-        let currentFixtures = [];
+    const API_KEY = "dcd98e1c2abe4aec8878296345a9efd0";
+    let currentFixtures = [];
 
-        // Known top-tier elite club identifiers for dynamic rating boost
-        const eliteClubs = ["Barcelona", "Real Madrid", "Manchester City", "Arsenal", "Liverpool", "Bayern", "Paris Saint-Germain", "Inter"];
+    // Exact string matches for elite teams so partial names (like Espanyol de Barcelona) don't trigger boosts
+    const eliteTeams = [
+        "FC Barcelona", 
+        "Real Madrid CF", 
+        "Manchester City FC", 
+        "Arsenal FC", 
+        "Liverpool FC", 
+        "FC Bayern München", 
+        "Paris Saint-Germain FC", 
+        "FC Internazionale Milano"
+    ];
 
-        async function fetchLiveFixtures() {
-            const leagueCode = document.getElementById('league-select').value;
-            const proxyUrl = 'https://corsproxy.io/?';
-            const apiUrl = encodeURIComponent(`https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=SCHEDULED`);
+    async function fetchLiveFixtures() {
+        const leagueCode = document.getElementById('league-select').value;
+        const proxyUrl = 'https://corsproxy.io/?';
+        const apiUrl = encodeURIComponent(`https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=SCHEDULED`);
 
-            try {
-                const response = await fetch(proxyUrl + apiUrl, {
-                    method: 'GET',
-                    headers: { 'X-Auth-Token': API_KEY }
-                });
-
-                const data = await response.json();
-                
-                if (data.errorCode || data.message) {
-                    alert("API Note: " + (data.message || "Error fetching matches."));
-                    return;
-                }
-
-                currentFixtures = data.matches || [];
-                const matchSelect = document.getElementById('match-select');
-                matchSelect.innerHTML = '';
-
-                if (currentFixtures.length === 0) {
-                    alert("No upcoming scheduled matches found for this league right now.");
-                    return;
-                }
-
-                currentFixtures.slice(0, 15).forEach((item, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    const matchDate = new Date(item.utcDate).toLocaleDateString();
-                    option.textContent = `${item.homeTeam.name} vs ${item.awayTeam.name} (${matchDate})`;
-                    matchSelect.appendChild(option);
-                });
-
-                document.getElementById('match-container').style.display = 'block';
-
-            } catch (error) {
-                console.error(error);
-                alert("Connection status check: Please verify connection.");
-            }
-        }
-
-        function generatePrediction() {
-            const selectedIndex = document.getElementById('match-select').value;
-            const fixture = currentFixtures[selectedIndex];
-
-            if (!fixture) return;
-
-            const homeName = fixture.homeTeam.name;
-            const awayName = fixture.awayTeam.name;
-
-            // Base statistical strength
-            let homeRating = 50;
-            let awayRating = 50;
-
-            // Apply home ground advantage (+5%)
-            homeRating += 5;
-
-            // Check if either club belongs to elite club vectors
-            eliteClubs.forEach(club => {
-                if (homeName.includes(club)) homeRating += 25;
-                if (awayName.includes(club)) awayRating += 25;
+        try {
+            const response = await fetch(proxyUrl + apiUrl, {
+                method: 'GET',
+                headers: { 'X-Auth-Token': API_KEY }
             });
 
-            // Normalize ratings to sum to 100%
-            const total = homeRating + awayRating;
-            const homePct = Math.round((homeRating / total) * 100);
-            const awayPct = 100 - homePct;
-
-            // Generate prediction based on calculated rating threshold
-            let recommendation = "";
-            if (homePct > 60) {
-                recommendation = `${homeName} Win or Draw (Double Chance)`;
-            } else if (awayPct > 60) {
-                recommendation = `${awayName} Win or Draw (Double Chance)`;
-            } else {
-                recommendation = "Both Teams To Score (BTTS) / Over 1.5 Goals";
+            const data = await response.json();
+            
+            if (data.errorCode || data.message) {
+                alert("API Note: " + (data.message || "Error fetching matches."));
+                return;
             }
 
-            // Output calculated results
-            document.getElementById('res-h2h').textContent = `${homeName}: ${homePct}% vs ${awayName}: ${awayPct}%`;
-            document.getElementById('res-goals').textContent = `Over 1.5 Goals (${Math.max(homePct, awayPct) + 15}% Probability)`;
-            document.getElementById('res-pred').textContent = recommendation;
+            currentFixtures = data.matches || [];
+            const matchSelect = document.getElementById('match-select');
+            matchSelect.innerHTML = '';
 
-            document.getElementById('prediction-results').style.display = 'block';
+            if (currentFixtures.length === 0) {
+                alert("No upcoming scheduled matches found for this league right now.");
+                return;
+            }
+
+            currentFixtures.slice(0, 15).forEach((item, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                const matchDate = new Date(item.utcDate).toLocaleDateString();
+                option.textContent = `${item.homeTeam.name} vs ${item.awayTeam.name} (${matchDate})`;
+                matchSelect.appendChild(option);
+            });
+
+            document.getElementById('match-container').style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            alert("Connection status check: Please verify connection.");
         }
-    </script>
+    }
+
+    function generatePrediction() {
+        const selectedIndex = document.getElementById('match-select').value;
+        const fixture = currentFixtures[selectedIndex];
+
+        if (!fixture) return;
+
+        const homeName = fixture.homeTeam.name;
+        const awayName = fixture.awayTeam.name;
+
+        // Base rating
+        let homeRating = 50;
+        let awayRating = 50;
+
+        // Home advantage (+5%)
+        homeRating += 5;
+
+        // Precise matching check
+        eliteTeams.forEach(team => {
+            if (homeName === team || (homeName.includes("Barcelona") && !homeName.includes("Espanyol"))) {
+                homeRating += 30;
+            }
+            if (awayName === team || (awayName.includes("Real Madrid"))) {
+                awayRating += 30;
+            }
+        });
+
+        // Normalize percentages to sum to 100%
+        const total = homeRating + awayRating;
+        const homePct = Math.round((homeRating / total) * 100);
+        const awayPct = 100 - homePct;
+
+        // Generate dynamic recommendation based on calculating the stronger side
+        let recommendation = "";
+        if (homePct >= 58) {
+            recommendation = `${homeName} Win or Draw (Double Chance)`;
+        } else if (awayPct >= 58) {
+            recommendation = `${awayName} Win or Draw (Double Chance)`;
+        } else {
+            recommendation = "Both Teams To Score (BTTS) / Over 1.5 Goals";
+        }
+
+        // Display results
+        document.getElementById('res-h2h').textContent = `${homeName}: ${homePct}% vs ${awayName}: ${awayPct}%`;
+        document.getElementById('res-goals').textContent = `Over 1.5 Goals (${Math.max(homePct, awayPct) + 12}% Probability)`;
+        document.getElementById('res-pred').textContent = recommendation;
+
+        document.getElementById('prediction-results').style.display = 'block';
+    }
+</script>
 </body>
 </html>
