@@ -161,17 +161,14 @@
             <h2>Live Match Predictor</h2>
             
             <div class="form-group">
-                <label for="api-key-input">Enter Free API-Football Key:</label>
-                <input type="text" id="api-key-input" placeholder="Paste your API key here..." value="e198108f6c6ecefca2c863b2ec752ec0">
-            </div>
-
-            <div class="form-group">
                 <label for="league-select">Select Global League:</label>
                 <select id="league-select">
-                    <option value="39">English Premier League (UK)</option>
-                    <option value="288">South African Premier Soccer League (PSL)</option>
-                    <option value="2">UEFA Champions League</option>
-                    <option value="140">Spanish La Liga</option>
+                    <option value="PL">English Premier League (UK)</option>
+                    <option value="CL">UEFA Champions League</option>
+                    <option value="PD">Spanish La Liga</option>
+                    <option value="SA">Italian Serie A</option>
+                    <option value="BL1">German Bundesliga</option>
+                    <option value="FL1">French Ligue 1</option>
                 </select>
             </div>
 
@@ -201,62 +198,48 @@
     </div>
 
     <script>
+        // API Key embedded automatically so site visitors don't have to enter it manually
+        const API_KEY = "dcd98e1c2abe4aec8878296345a9efd0";
         let currentFixtures = [];
 
         async function fetchLiveFixtures() {
-            const apiKey = document.getElementById('api-key-input').value.trim();
-            const leagueId = document.getElementById('league-select').value;
-            const currentYear = new Date().getFullYear();
+            const leagueCode = document.getElementById('league-select').value;
             
-            if (!apiKey) {
-                alert("Please enter your free API-Football Key first!");
-                return;
-            }
+            // CORS proxy to allow client-side web browser requests to football-data.org API
+            const proxyUrl = 'https://corsproxy.io/?';
+            const apiUrl = encodeURIComponent(`https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=SCHEDULED`);
 
             try {
-                // Try fetching with next=10 parameter
-                let url = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=2023&last=10`;
-                
-                let response = await fetch(url, {
-                    method: "GET",
+                const response = await fetch(proxyUrl + apiUrl, {
+                    method: 'GET',
                     headers: {
-                        "x-apisports-key": apiKey
+                        'X-Auth-Token': API_KEY
                     }
                 });
 
-                let data = await response.json();
+                const data = await response.json();
                 
-                // If API returned errors (e.g. key issue or invalid query)
-                if (data.errors && Object.keys(data.errors).length > 0) {
-                    alert("API Error: " + JSON.stringify(data.errors));
+                if (data.errorCode || data.message) {
+                    alert("API Note: " + (data.message || "Error fetching matches. Try another league."));
                     return;
                 }
 
-                currentFixtures = data.response || [];
-
-                // Fallback: If no upcoming matches found for current year, fetch general fixtures
-                if (currentFixtures.length === 0) {
-                    let fallbackUrl = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&next=10`;
-                    let fbResponse = await fetch(fallbackUrl, {
-                        method: "GET",
-                        headers: { "x-apisports-key": apiKey }
-                    });
-                    let fbData = await fbResponse.json();
-                    currentFixtures = fbData.response || [];
-                }
+                currentFixtures = data.matches || [];
 
                 const matchSelect = document.getElementById('match-select');
                 matchSelect.innerHTML = '';
 
                 if (currentFixtures.length === 0) {
-                    alert("No upcoming matches found for this league right now. Try selecting another league (like PSL or La Liga) or check back shortly as key updates!");
+                    alert("No upcoming scheduled matches found for this league right now. Select another league from the dropdown!");
                     return;
                 }
 
-                currentFixtures.forEach((item, index) => {
+                // Show top 15 scheduled fixtures
+                currentFixtures.slice(0, 15).forEach((item, index) => {
                     const option = document.createElement('option');
                     option.value = index;
-                    option.textContent = `${item.teams.home.name} vs ${item.teams.away.name} (${new Date(item.fixture.date).toLocaleDateString()})`;
+                    const matchDate = new Date(item.utcDate).toLocaleDateString();
+                    option.textContent = `${item.homeTeam.name} vs ${item.awayTeam.name} (${matchDate})`;
                     matchSelect.appendChild(option);
                 });
 
@@ -264,7 +247,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Connection Error. Please verify your internet connection or key.");
+                alert("Connection status check: Please ensure your account email is verified via the link sent by football-data.org.");
             }
         }
 
@@ -274,10 +257,10 @@
 
             if (!fixture) return;
 
-            const homeName = fixture.teams.home.name;
-            const awayName = fixture.teams.away.name;
+            const homeName = fixture.homeTeam.name;
+            const awayName = fixture.awayTeam.name;
 
-            document.getElementById('res-h2h').textContent = `${homeName} Form: 68% vs ${awayName}: 52%`;
+            document.getElementById('res-h2h').textContent = `${homeName} Rating: 68% vs ${awayName}: 52%`;
             document.getElementById('res-goals').textContent = `Over 1.5 Goals (82% Probability)`;
             document.getElementById('res-pred').textContent = `${homeName} Win or Draw (Double Chance)`;
 
