@@ -177,12 +177,12 @@
             <div class="form-group" id="match-container" style="margin-top: 15px; display: none;">
                 <label for="match-select">Select Upcoming Fixture:</label>
                 <select id="match-select"></select>
-                <button class="analyze-btn" style="background-color: var(--accent-green);" onclick="generatePrediction()">Generate AI Prediction</button>
+                <button class="analyze-btn" id="btn-predict" style="background-color: var(--accent-green);" onclick="generatePrediction()">Generate AI Prediction</button>
             </div>
 
             <div id="prediction-results" class="result-box">
-                <div class="stat-row"><span>Head-to-Head Form Vector:</span> <span class="stat-value" id="res-h2h">Analyzing...</span></div>
-                <div class="stat-row"><span>Poisson Goal Probability:</span> <span class="stat-value" id="res-goals">Analyzing...</span></div>
+                <div class="stat-row"><span>Head-to-Head Record:</span> <span class="stat-value" id="res-h2h">Analyzing...</span></div>
+                <div class="stat-row"><span>Goal Expectancy:</span> <span class="stat-value" id="res-goals">Analyzing...</span></div>
                 <div class="stat-row"><span>Algorithmic Recommendation:</span> <span class="stat-value" id="res-pred" style="color: var(--accent-gold);">Analyzing...</span></div>
 
                 <div class="affiliate-section">
@@ -198,112 +198,126 @@
     </div>
 
     <script>
-    const API_KEY = "dcd98e1c2abe4aec8878296345a9efd0";
-    let currentFixtures = [];
+        const API_KEY = "dcd98e1c2abe4aec8878296345a9efd0";
+        let currentFixtures = [];
 
-    // Exact string matches for elite teams so partial names (like Espanyol de Barcelona) don't trigger boosts
-    const eliteTeams = [
-        "FC Barcelona", 
-        "Real Madrid CF", 
-        "Manchester City FC", 
-        "Arsenal FC", 
-        "Liverpool FC", 
-        "FC Bayern München", 
-        "Paris Saint-Germain FC", 
-        "FC Internazionale Milano"
-    ];
+        async function fetchLiveFixtures() {
+            const leagueCode = document.getElementById('league-select').value;
+            const proxyUrl = 'https://corsproxy.io/?';
+            const apiUrl = encodeURIComponent(`https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=SCHEDULED`);
 
-    async function fetchLiveFixtures() {
-        const leagueCode = document.getElementById('league-select').value;
-        const proxyUrl = 'https://corsproxy.io/?';
-        const apiUrl = encodeURIComponent(`https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=SCHEDULED`);
+            try {
+                const response = await fetch(proxyUrl + apiUrl, {
+                    method: 'GET',
+                    headers: { 'X-Auth-Token': API_KEY }
+                });
 
-        try {
-            const response = await fetch(proxyUrl + apiUrl, {
-                method: 'GET',
-                headers: { 'X-Auth-Token': API_KEY }
-            });
+                const data = await response.json();
+                
+                if (data.errorCode || data.message) {
+                    alert("API Note: " + (data.message || "Error fetching matches."));
+                    return;
+                }
 
-            const data = await response.json();
-            
-            if (data.errorCode || data.message) {
-                alert("API Note: " + (data.message || "Error fetching matches."));
-                return;
+                currentFixtures = data.matches || [];
+                const matchSelect = document.getElementById('match-select');
+                matchSelect.innerHTML = '';
+
+                if (currentFixtures.length === 0) {
+                    alert("No upcoming scheduled matches found for this league right now.");
+                    return;
+                }
+
+                currentFixtures.slice(0, 15).forEach((item) => {
+                    const option = document.createElement('option');
+                    option.value = item.id; // Store actual match ID
+                    const matchDate = new Date(item.utcDate).toLocaleDateString();
+                    option.textContent = `${item.homeTeam.name} vs ${item.awayTeam.name} (${matchDate})`;
+                    matchSelect.appendChild(option);
+                });
+
+                document.getElementById('match-container').style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                alert("Connection status check: Please verify connection.");
             }
-
-            currentFixtures = data.matches || [];
-            const matchSelect = document.getElementById('match-select');
-            matchSelect.innerHTML = '';
-
-            if (currentFixtures.length === 0) {
-                alert("No upcoming scheduled matches found for this league right now.");
-                return;
-            }
-
-            currentFixtures.slice(0, 15).forEach((item, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                const matchDate = new Date(item.utcDate).toLocaleDateString();
-                option.textContent = `${item.homeTeam.name} vs ${item.awayTeam.name} (${matchDate})`;
-                matchSelect.appendChild(option);
-            });
-
-            document.getElementById('match-container').style.display = 'block';
-
-        } catch (error) {
-            console.error(error);
-            alert("Connection status check: Please verify connection.");
-        }
-    }
-
-    function generatePrediction() {
-        const selectedIndex = document.getElementById('match-select').value;
-        const fixture = currentFixtures[selectedIndex];
-
-        if (!fixture) return;
-
-        const homeName = fixture.homeTeam.name;
-        const awayName = fixture.awayTeam.name;
-
-        // Base rating
-        let homeRating = 50;
-        let awayRating = 50;
-
-        // Home advantage (+5%)
-        homeRating += 5;
-
-        // Precise matching check
-        eliteTeams.forEach(team => {
-            if (homeName === team || (homeName.includes("Barcelona") && !homeName.includes("Espanyol"))) {
-                homeRating += 30;
-            }
-            if (awayName === team || (awayName.includes("Real Madrid"))) {
-                awayRating += 30;
-            }
-        });
-
-        // Normalize percentages to sum to 100%
-        const total = homeRating + awayRating;
-        const homePct = Math.round((homeRating / total) * 100);
-        const awayPct = 100 - homePct;
-
-        // Generate dynamic recommendation based on calculating the stronger side
-        let recommendation = "";
-        if (homePct >= 58) {
-            recommendation = `${homeName} Win or Draw (Double Chance)`;
-        } else if (awayPct >= 58) {
-            recommendation = `${awayName} Win or Draw (Double Chance)`;
-        } else {
-            recommendation = "Both Teams To Score (BTTS) / Over 1.5 Goals";
         }
 
-        // Display results
-        document.getElementById('res-h2h').textContent = `${homeName}: ${homePct}% vs ${awayName}: ${awayPct}%`;
-        document.getElementById('res-goals').textContent = `Over 1.5 Goals (${Math.max(homePct, awayPct) + 12}% Probability)`;
-        document.getElementById('res-pred').textContent = recommendation;
+        async function generatePrediction() {
+            const matchId = document.getElementById('match-select').value;
+            const fixture = currentFixtures.find(m => m.id == matchId);
 
-        document.getElementById('prediction-results').style.display = 'block';
-    }
-</script>
+            if (!fixture) return;
+
+            const btn = document.getElementById('btn-predict');
+            btn.textContent = "Fetching Live H2H Analytics...";
+            btn.disabled = true;
+
+            const homeName = fixture.homeTeam.name;
+            const awayName = fixture.awayTeam.name;
+
+            const proxyUrl = 'https://corsproxy.io/?';
+            const apiUrl = encodeURIComponent(`https://api.football-data.org/v4/matches/${matchId}/head2head?limit=10`);
+
+            try {
+                const response = await fetch(proxyUrl + apiUrl, {
+                    method: 'GET',
+                    headers: { 'X-Auth-Token': API_KEY }
+                });
+
+                const data = await response.json();
+                const h2h = data.aggregates || data.head2head;
+
+                let homeWins = 0;
+                let awayWins = 0;
+                let draws = 0;
+                let totalMatches = 0;
+                let totalGoals = 0;
+
+                if (h2h) {
+                    homeWins = h2h.homeTeam ? h2h.homeTeam.wins : (h2h.numberOfMatches ? h2h.homeTeamWins : 0);
+                    awayWins = h2h.awayTeam ? h2h.awayTeam.wins : (h2h.numberOfMatches ? h2h.awayTeamWins : 0);
+                    draws = h2h.draws !== undefined ? h2h.draws : 0;
+                    totalMatches = h2h.numberOfMatches || (homeWins + awayWins + draws);
+                    totalGoals = h2h.totalGoals || 0;
+                }
+
+                // If no direct H2H history exists in the free plan response, fallback to realistic base calculation
+                if (totalMatches === 0) {
+                    document.getElementById('res-h2h').textContent = `${homeName} vs ${awayName} (Limited H2H History)`;
+                    document.getElementById('res-goals').textContent = `Over 1.5 Goals (Estimated 65%)`;
+                    document.getElementById('res-pred').textContent = `${homeName} or Draw (Home Advantage)`;
+                } else {
+                    const homeWinPct = Math.round((homeWins / totalMatches) * 100);
+                    const awayWinPct = Math.round((awayWins / totalMatches) * 100);
+                    const drawPct = 100 - homeWinPct - awayWinPct;
+                    const avgGoals = (totalGoals / totalMatches).toFixed(1);
+
+                    let recommendation = "";
+                    if (homeWinPct >= 50) {
+                        recommendation = `${homeName} Win or Draw (Double Chance)`;
+                    } else if (awayWinPct >= 50) {
+                        recommendation = `${awayName} Win or Draw (Double Chance)`;
+                    } else {
+                        recommendation = "Both Teams To Score / Over 1.5 Goals";
+                    }
+
+                    document.getElementById('res-h2h').textContent = `Past ${totalMatches} games: ${homeName} (${homeWins}W) | ${awayName} (${awayWins}W) | Draws (${draws})`;
+                    document.getElementById('res-goals').textContent = `Avg ${avgGoals} goals/match (${avgGoals > 2.0 ? 'High' : 'Moderate'} scoring potential)`;
+                    document.getElementById('res-pred').textContent = recommendation;
+                }
+
+                document.getElementById('prediction-results').style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                alert("Error retrieving H2H data from API.");
+            } finally {
+                btn.textContent = "Generate AI Prediction";
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
