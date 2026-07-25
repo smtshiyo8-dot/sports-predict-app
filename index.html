@@ -230,7 +230,7 @@
 
                 currentFixtures.slice(0, 15).forEach((item) => {
                     const option = document.createElement('option');
-                    option.value = item.id; // Store actual match ID
+                    option.value = item.id;
                     const matchDate = new Date(item.utcDate).toLocaleDateString();
                     option.textContent = `${item.homeTeam.name} vs ${item.awayTeam.name} (${matchDate})`;
                     matchSelect.appendChild(option);
@@ -251,9 +251,11 @@
             if (!fixture) return;
 
             const btn = document.getElementById('btn-predict');
-            btn.textContent = "Fetching Live H2H Analytics...";
+            btn.textContent = "Analyzing Historical Matches...";
             btn.disabled = true;
 
+            const homeId = fixture.homeTeam.id;
+            const awayId = fixture.awayTeam.id;
             const homeName = fixture.homeTeam.name;
             const awayName = fixture.awayTeam.name;
 
@@ -267,32 +269,42 @@
                 });
 
                 const data = await response.json();
-                const h2h = data.aggregates || data.head2head;
+                const matches = data.matches || [];
 
                 let homeWins = 0;
                 let awayWins = 0;
                 let draws = 0;
-                let totalMatches = 0;
                 let totalGoals = 0;
+                let validMatchesCount = 0;
 
-                if (h2h) {
-                    homeWins = h2h.homeTeam ? h2h.homeTeam.wins : (h2h.numberOfMatches ? h2h.homeTeamWins : 0);
-                    awayWins = h2h.awayTeam ? h2h.awayTeam.wins : (h2h.numberOfMatches ? h2h.awayTeamWins : 0);
-                    draws = h2h.draws !== undefined ? h2h.draws : 0;
-                    totalMatches = h2h.numberOfMatches || (homeWins + awayWins + draws);
-                    totalGoals = h2h.totalGoals || 0;
-                }
+                // Direct match-by-match calculation loop
+                matches.forEach(m => {
+                    const score = m.score ? m.score.fullTime : null;
+                    if (score && score.home !== null && score.away !== null) {
+                        validMatchesCount++;
+                        totalGoals += (score.home + score.away);
 
-                // If no direct H2H history exists in the free plan response, fallback to realistic base calculation
-                if (totalMatches === 0) {
-                    document.getElementById('res-h2h').textContent = `${homeName} vs ${awayName} (Limited H2H History)`;
+                        // Determine which team was home/away in that historical match and tabulate result
+                        if (m.homeTeam.id === homeId) {
+                            if (score.home > score.away) homeWins++;
+                            else if (score.away > score.home) awayWins++;
+                            else draws++;
+                        } else if (m.awayTeam.id === homeId) {
+                            if (score.away > score.home) homeWins++;
+                            else if (score.home > score.away) awayWins++;
+                            else draws++;
+                        }
+                    }
+                });
+
+                if (validMatchesCount === 0) {
+                    document.getElementById('res-h2h').textContent = `Limited historical data available between these teams.`;
                     document.getElementById('res-goals').textContent = `Over 1.5 Goals (Estimated 65%)`;
                     document.getElementById('res-pred').textContent = `${homeName} or Draw (Home Advantage)`;
                 } else {
-                    const homeWinPct = Math.round((homeWins / totalMatches) * 100);
-                    const awayWinPct = Math.round((awayWins / totalMatches) * 100);
-                    const drawPct = 100 - homeWinPct - awayWinPct;
-                    const avgGoals = (totalGoals / totalMatches).toFixed(1);
+                    const avgGoals = (totalGoals / validMatchesCount).toFixed(1);
+                    const homeWinPct = Math.round((homeWins / validMatchesCount) * 100);
+                    const awayWinPct = Math.round((awayWins / validMatchesCount) * 100);
 
                     let recommendation = "";
                     if (homeWinPct >= 50) {
@@ -303,8 +315,8 @@
                         recommendation = "Both Teams To Score / Over 1.5 Goals";
                     }
 
-                    document.getElementById('res-h2h').textContent = `Past ${totalMatches} games: ${homeName} (${homeWins}W) | ${awayName} (${awayWins}W) | Draws (${draws})`;
-                    document.getElementById('res-goals').textContent = `Avg ${avgGoals} goals/match (${avgGoals > 2.0 ? 'High' : 'Moderate'} scoring potential)`;
+                    document.getElementById('res-h2h').textContent = `Past ${validMatchesCount} games: ${homeName} (${homeWins}W) | ${awayName} (${awayWins}W) | Draws (${draws})`;
+                    document.getElementById('res-goals').textContent = `Avg ${avgGoals} goals/match (${avgGoals >= 2.5 ? 'High' : 'Moderate'} scoring potential)`;
                     document.getElementById('res-pred').textContent = recommendation;
                 }
 
@@ -312,7 +324,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Error retrieving H2H data from API.");
+                alert("Error parsing H2H data from API.");
             } finally {
                 btn.textContent = "Generate AI Prediction";
                 btn.disabled = false;
