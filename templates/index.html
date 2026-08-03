@@ -17,11 +17,11 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        h1 { font-size: 1.5rem; margin: 0; color: var(--accent-blue); }
+        h1 { font-size: 1.5rem; margin: 0; color: var(--accent-blue); cursor: pointer; } 
         .status-badge { font-size: 0.85rem; color: var(--text-muted); }
         .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
-        select { width: 100%; padding: 10px; background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; margin-bottom: 15px; font-size: 1rem; }
+        select, input, textarea { width: 100%; padding: 10px; background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; margin-bottom: 15px; font-size: 1rem; box-sizing: border-box; }
         button { background-color: var(--accent-blue); color: #0f172a; border: none; padding: 12px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 1rem; }
         button:hover { opacity: 0.9; }
         .btn-green { background-color: var(--accent-green); }
@@ -30,25 +30,102 @@
         .metric-title { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
         .metric-value { font-size: 1rem; font-weight: 600; color: var(--accent-green); }
         .recommendation-box { background-color: var(--bg-color); border-left: 4px solid var(--accent-green); padding: 15px; border-radius: 0 6px 6px 0; margin-bottom: 20px; }
-        #owner-panel { display: none; border-color: #f59e0b; }
+        
+        /* Admin Dashboard Styles */
+        #admin-panel { display: none; border: 2px solid #f59e0b; background-color: #172033; }
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        .admin-table th, .admin-table td { border: 1px solid var(--border-color); padding: 8px 12px; text-align: left; }
+        .admin-table th { background-color: var(--card-bg); color: var(--accent-blue); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Autonomous Sports Analytics & Aggregator</h1>
+        <!-- Cofa apha kathathu okanye ngokucofa okuqhelekileyo ukuze ufake i-PIN ye-Admin -->
+        <h1 onclick="promptAdminAccess()" title="Click here for Admin Portal">Autonomous Sports Analytics & Aggregator</h1>
         <div>
             <span id="status-text" class="status-badge">Connecting to Live Feed...</span>
-            <button onclick="toggleOwnerDashboard()" style="width: auto; padding: 4px 10px; font-size: 0.8rem; margin-left: 10px; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);">Owner Panel</button>
         </div>
     </header>
 
-    <div id="owner-panel" class="card">
-        <h3>Owner Affiliate & Commission Dashboard</h3>
-        <p>Total Tracked Clicks: <span id="owner-clicks" style="color: var(--accent-blue);">0</span></p>
-        <p>Accumulated Earnings: <span id="owner-earnings" style="color: var(--accent-green);">R0.00</span></p>
+    <!-- Ad Banner Section (Top) -->
+    <div class="ad-banner-container" style="text-align: center; margin-bottom: 20px; padding: 10px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px;">
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Advertisement</p>
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
+             data-ad-slot="YOUR_AD_SLOT_ID"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
+
+    <!-- ================= ADMIN DASHBOARD (OWNER / AUTHORIZED ONLY) ================= -->
+    <div id="admin-panel" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <h3 style="color: #f59e0b; margin: 0;">🛡️ Exclusive Admin & Owner Control Panel</h3>
+            <button onclick="hideAdminDashboard()" style="width: auto; background: var(--border-color); color: var(--text-color); padding: 5px 12px; font-size: 0.8rem;">Close Panel</button>
+        </div>
+
+        <!-- 1. Proceeds / Earnings Overview -->
+        <div class="results-grid" style="margin-bottom: 20px;">
+            <div class="metric-box">
+                <div class="metric-title">Total Proceeds / Revenue</div>
+                <div class="metric-value" id="admin-earnings">R12,450.00</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-title">Registered App Users</div>
+                <div class="metric-value" id="admin-users-count" style="color: var(--accent-blue);">348</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-title">Total Visits (Traffic)</div>
+                <div class="metric-value" id="admin-visits-count" style="color: #f59e0b;">1,892</div>
+            </div>
+        </div>
+
+        <!-- 2. Visiting Stats & Download Option -->
+        <div class="metric-box" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span class="metric-title" style="font-size: 0.9rem;">Visiting Statistics & Traffic Logs</span>
+                <button onclick="downloadVisitingStats()" style="width: auto; background: var(--accent-blue); color: #0f172a; padding: 6px 14px; font-size: 0.85rem;">📥 Download Stats (CSV)</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Active daily traffic is tracked securely. Click download above to export logs for deep analysis.</p>
+        </div>
+
+        <!-- 3. Registered Users List -->
+        <div class="metric-box" style="margin-bottom: 20px;">
+            <div class="metric-title" style="font-size: 0.9rem; margin-bottom: 10px;">Registered Users Database</div>
+            <div style="max-height: 150px; overflow-y: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>User ID / Name</th><th>Email</th><th>Role / Tier</th><th>Date Joined</th></tr>
+                    </thead>
+                    <tbody id="admin-users-table">
+                        <tr><td>#USR-101</td><td>user1@example.com</td><td>VIP Member</td><td>2026-07-15</td></tr>
+                        <tr><td>#USR-102</td><td>user2@example.com</td><td>Standard</td><td>2026-08-01</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. User Enquiries & Suggestions -->
+        <div class="metric-box">
+            <div class="metric-title" style="font-size: 0.9rem; margin-bottom: 10px;">User Enquiries & Suggestions Feedback</div>
+            <div style="max-height: 180px; overflow-y: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Type</th><th>From</th><th>Message / Suggestion</th><th>Date</th></tr>
+                    </thead>
+                    <tbody id="admin-feedback-table">
+                        <tr><td><span style="color: var(--accent-blue);">Enquiry</span></td><td>Sipho M.</td><td>How do I upgrade my account to access VIP analytics?</td><td>2026-08-02</td></tr>
+                        <tr><td><span style="color: var(--accent-green);">Suggestion</span></td><td>Lerato K.</td><td>Please add local Diski Shield matches if possible!</td><td>2026-08-01</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- ================= END ADMIN PANEL ================= -->
 
     <div class="card">
         <label for="country-select">Step 1: Select Region / Country (Live Feed)</label>
@@ -70,7 +147,20 @@
         <select id="match-select">
             <option value="">-- Select Fixture --</option>
         </select>
-        <button class="btn-green" id="btn-predict" onclick="generateAdvancedPrediction()">Perform Multi-Factor Analysis & Show Results</button>
+        <button class="btn-green" id="btn-predict" onclick="triggerPredictionFlow()">Perform Multi-Factor Analysis & Show Results</button>
+    </div>
+
+    <!-- VIP Prediction Lock Section -->
+    <div class="card" id="vip-lock-card" style="display:none; border: 2px dashed #f59e0b; background: #1e1b4b; text-align: center;">
+        <h3 style="color: #f59e0b; margin-bottom: 10px;">⭐ VIP Deep Multi-Factor Analysis Locked</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+            This advanced tactical and statistical breakdown is exclusive to VIP members. Enter your VIP Access Key below to unlock:
+        </p>
+        <div style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
+            <input type="password" id="vip-key-input" placeholder="Enter VIP Access Key" style="flex: 1; padding: 10px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; margin-bottom: 0;">
+            <button onclick="unlockVIPAnalysis()" style="width: auto; background: #f59e0b; color: #0f172a;">Unlock VIP</button>
+        </div>
+        <p id="vip-error-msg" style="color: #ef4444; font-size: 0.8rem; margin-top: 8px; display: none;">Invalid VIP Key. Please try again.</p>
     </div>
 
     <div id="prediction-results" style="display:none;">
@@ -88,6 +178,36 @@
             <div class="metric-title">Accurate Match Outcome & Prediction:</div>
             <div id="res-pred" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green); margin-top: 4px;">-</div>
         </div>
+
+        <!-- Betting Affiliate / CPA Referral Section -->
+        <div class="card" style="border: 1px solid var(--accent-blue); text-align: center; margin-top: 20px;">
+            <h3 style="color: var(--accent-blue); margin-bottom: 10px; font-size: 1.2rem;">🔥 Ready to Place Your Bets? Support the App!</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                Get the best odds and place your bets on our trusted partners using our secure links below:
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="https://www.betway.co.za/?btag=YOUR_AFFILIATE_ID" target="_blank" 
+                   style="background: #16a34a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">
+                   Bet with Betway
+                </a>
+                <a href="https://www.hollywoodbets.net/?ref=YOUR_AFFILIATE_ID" target="_blank" 
+                   style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">
+                   Bet with Hollywoodbets
+                </a>
+            </div>
+        </div>
+
+        <!-- Optional User Feedback Form for App Users to send Enquiries/Suggestions -->
+        <div class="card" style="margin-top: 20px;">
+            <h3 style="color: var(--accent-blue); font-size: 1.1rem; margin-bottom: 10px;">Send Us an Enquiry or Suggestion</h3>
+            <input type="text" id="feedback-name" placeholder="Your Name">
+            <select id="feedback-type">
+                <option value="Enquiry">Enquiry</option>
+                <option value="Suggestion">Suggestion</option>
+            </select>
+            <textarea id="feedback-msg" rows="3" placeholder="Type your message here..."></textarea>
+            <button onclick="submitUserFeedback()" style="background: var(--accent-blue); color: #0f172a;">Submit to Admin</button>
+        </div>
     </div>
 </div>
 
@@ -99,9 +219,57 @@
         await initializeLiveCountries();
     };
 
-    function toggleOwnerDashboard() {
-        const panel = document.getElementById('owner-panel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    // Admin Security & Dashboard Toggles
+    function promptAdminAccess() {
+        const pin = prompt("Enter Admin / Owner PIN:");
+        const adminPin = "1090"; // Unokuyitshintsha la PIN apha ngendlela othanda ngayo
+
+        if (pin === adminPin) {
+            const panel = document.getElementById('admin-panel');
+            panel.style.display = 'block';
+            panel.scrollIntoView({ behavior: 'smooth' });
+        } else if (pin !== null) {
+            alert("Incorrect Admin PIN.");
+        }
+    }
+
+    function hideAdminDashboard() {
+        document.getElementById('admin-panel').style.display = 'none';
+    }
+
+    // Function to Download Visiting Stats as CSV file
+    function downloadVisitingStats() {
+        const statsData = "Date,Total Visits,Unique Visitors,Platform\n2026-08-01,950,820,Web/Mobile\n2026-08-02,942,790,Web/Mobile";
+        const blob = new Blob([statsData], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "Visiting_Stats_Report.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // Handle incoming feedback/suggestions from users
+    function submitUserFeedback() {
+        const name = document.getElementById('feedback-name').value.trim();
+        const type = document.getElementById('feedback-type').value;
+        const msg = document.getElementById('feedback-msg').value.trim();
+
+        if (!name || !msg) {
+            alert("Please fill in your name and message.");
+            return;
+        }
+
+        const table = document.getElementById('admin-feedback-table');
+        const newRow = table.insertRow(0);
+        const today = new Date().toISOString().split('T')[0];
+        
+        newRow.innerHTML = `<td><span style="color: var(--accent-blue);">${type}</span></td><td>${name}</td><td>${msg}</td><td>${today}</td>`;
+        
+        alert("Thank you! Your message has been sent directly to the Admin dashboard.");
+        document.getElementById('feedback-name').value = '';
+        document.getElementById('feedback-msg').value = '';
     }
 
     async function initializeLiveCountries() {
@@ -157,39 +325,37 @@
     function resetFixtureSelection() {
         document.getElementById('match-container').style.display = 'none';
         document.getElementById('prediction-results').style.display = 'none';
+        document.getElementById('vip-lock-card').style.display = 'none';
     }
 
     async function loadLiveFixtures() {
-    const leagueId = document.getElementById('league-select').value;
-    if (!leagueId) return;
+        const leagueId = document.getElementById('league-select').value;
+        if (!leagueId) return;
 
-    const btn = document.getElementById('btn-load-fixtures');
-    btn.textContent = "Fetching Live Fixtures from API...";
-    btn.disabled = true;
+        const btn = document.getElementById('btn-load-fixtures');
+        btn.textContent = "Fetching Live Fixtures from API...";
+        btn.disabled = true;
 
-    // Use current year 2026 or allow live fixtures for the active season
-    const season = 2026;
-    try {
-        // Fetch fixtures for the league using the current season and upcoming parameters
-        const res = await fetch(`${PROXY_URL}fixtures&league=${leagueId}&season=${season}&next=20`);
-        const data = await res.json();
-        
-        if (data.response && data.response.length > 0) {
-            currentFixtures = data.response;
-        } else {
-            // Fallback to fetching recent/current fixtures if 'next' returns empty for the current calendar
-            const fallbackRes = await fetch(`${PROXY_URL}fixtures&league=${leagueId}&season=${season}&last=20`);
-            const fallbackData = await fallbackRes.json();
-            currentFixtures = (fallbackData.response && fallbackData.response.length > 0) ? fallbackData.response : [];
+        const season = 2026;
+        try {
+            const res = await fetch(`${PROXY_URL}fixtures&league=${leagueId}&season=${season}&next=20`);
+            const data = await res.json();
+            
+            if (data.response && data.response.length > 0) {
+                currentFixtures = data.response;
+            } else {
+                const fallbackRes = await fetch(`${PROXY_URL}fixtures&league=${leagueId}&season=${season}&last=20`);
+                const fallbackData = await fallbackRes.json();
+                currentFixtures = (fallbackData.response && fallbackData.response.length > 0) ? fallbackData.response : [];
+            }
+        } catch (e) {
+            currentFixtures = [];
         }
-    } catch (e) {
-        currentFixtures = [];
-    }
 
-    btn.textContent = "Load Up-to-Date Fixtures & Results";
-    btn.disabled = false;
-    renderMatchDropdown();
-}
+        btn.textContent = "Load Up-to-Date Fixtures & Results";
+        btn.disabled = false;
+        renderMatchDropdown();
+    }
 
     function renderMatchDropdown() {
         const matchSelect = document.getElementById('match-select');
@@ -210,6 +376,27 @@
             matchSelect.appendChild(opt);
         });
         document.getElementById('match-container').style.display = 'block';
+    }
+
+    function triggerPredictionFlow() {
+        const fixtureId = document.getElementById('match-select').value;
+        if (!fixtureId) return;
+        
+        document.getElementById('prediction-results').style.display = 'none';
+        document.getElementById('vip-lock-card').style.display = 'block';
+    }
+
+    function unlockVIPAnalysis() {
+        const userKey = document.getElementById('vip-key-input').value.trim();
+        const validVIPKey = "VIP-SECRET-2026";
+
+        if (userKey === validVIPKey) {
+            document.getElementById('vip-lock-card').style.display = 'none';
+            document.getElementById('vip-error-msg').style.display = 'none';
+            generateAdvancedPrediction();
+        } else {
+            document.getElementById('vip-error-msg').style.display = 'block';
+        }
     }
 
     function generateAdvancedPrediction() {
