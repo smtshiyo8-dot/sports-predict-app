@@ -27,6 +27,8 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Autonomous Sports Analytics & Aggregator</title>
+    <!-- Google AdSense Verification Script -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8221654895334238" crossorigin="anonymous"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <style>
         :root {
@@ -84,8 +86,9 @@ HTML_TEMPLATE = """
         <div><span class="status-badge"><span class="pulse-dot"></span>Live Match Analytics Engine</span></div>
     </header>
 
+    <!-- Automated Ad Banner / VIP Pass Funnel -->
     <div id="ad-banner">
-        <div>
+        <div id="programmatic-ad-slot">
             <strong style="color: #a5b4fc;">⭐ 48-Hour VIP Pass:</strong> 
             <span>Unlock 48 Hours of Full Statistical Predictions & Double Chance Tips for R30.</span>
         </div>
@@ -95,7 +98,7 @@ HTML_TEMPLATE = """
     <div id="notification-banner">
         <div>
             <strong style="color: var(--accent-blue);">🔔 System Status:</strong> 
-            <span id="notification-text">Support Enquiries & Live Match Analytics Active.</span>
+            <span id="notification-text">AdSense Integration, Automated Monetization & Analytics Active.</span>
         </div>
         <button onclick="document.getElementById('notification-banner').style.display='none'" style="width: auto; background: transparent; color: var(--text-muted); padding: 4px 8px;">✕</button>
     </div>
@@ -187,8 +190,9 @@ HTML_TEMPLATE = """
             <div id="res-pred" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green); margin-top: 4px;">-</div>
         </div>
 
+        <!-- Automated Affiliate Bookmaker Integration -->
         <div class="card" style="background: linear-gradient(135deg, #064e3b, #022c22);">
-            <h3 style="color: #34d399; margin-top: 0; font-size: 1.1rem; text-align: center;">💰 Bookmaker Partner Integration</h3>
+            <h3 style="color: #34d399; margin-top: 0; font-size: 1.1rem; text-align: center;">💰 Automated Affiliate Bookmaker Integration</h3>
             <div class="bookmaker-grid">
                 <a href="https://www.betway.co.za/?btag=BPA119179" target="_blank" style="display: block; background: #10b981; color: #fff; padding: 12px; font-weight: bold; border-radius: 6px; text-decoration: none; text-align: center;">Back on Betway (BPA119179)</a>
                 <a href="https://www.hollywoodbets.net" target="_blank" style="display: block; background: purple; color: #fff; padding: 12px; font-weight: bold; border-radius: 6px; text-decoration: none; text-align: center;">Back on Hollywoodbets</a>
