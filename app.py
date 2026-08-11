@@ -42,8 +42,11 @@ HTML_TEMPLATE = """
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
         .container { max-width: 950px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        h1 { font-size: 1.5rem; margin: 0; color: var(--accent-blue); cursor: pointer; user-select: none; } 
+        header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+        .logo-container { margin-bottom: 15px; cursor: pointer; }
+        .logo-container img { max-height: 90px; width: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .header-title-row { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 10px; }
+        h1 { font-size: 1.3rem; margin: 0; color: var(--accent-blue); cursor: pointer; user-select: none; } 
         .status-badge { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
         .pulse-dot { width: 8px; height: 8px; background-color: var(--accent-green); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--accent-green); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
@@ -78,7 +81,6 @@ HTML_TEMPLATE = """
         .form-loss { background: #7f1d1d; color: #fca5a5; }
         .bookmaker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         
-        /* Legal Modal & Footer Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: var(--card-bg); margin: 10% auto; padding: 25px; border: 1px solid var(--border-color); width: 80%; max-width: 600px; border-radius: 8px; max-height: 80vh; overflow-y: auto; color: var(--text-color); }
         .close-btn { color: var(--text-muted); float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -91,11 +93,15 @@ HTML_TEMPLATE = """
 <body>
 <div class="container">
     <header>
-        <h1 onclick="promptAdminAccess()" title="Admin Portal">Autonomous Sports Analytics & Aggregator</h1>
-        <div><span class="status-badge"><span class="pulse-dot"></span>Live Match Analytics Engine</span></div>
+        <div class="logo-container" onclick="promptAdminAccess()" title="Admin Portal">
+            <img src="/static/logo.png" alt="Autonomous Sports Analytics Logo">
+        </div>
+        <div class="header-title-row">
+            <h1 onclick="promptAdminAccess()" title="Admin Portal">Autonomous Sports Analytics & Aggregator</h1>
+            <div><span class="status-badge"><span class="pulse-dot"></span>Live Match Analytics Engine</span></div>
+        </div>
     </header>
 
-    <!-- Automated Ad Banner / VIP Pass Funnel -->
     <div id="ad-banner">
         <div id="programmatic-ad-slot">
             <strong style="color: #a5b4fc;">⭐ 48-Hour VIP Pass:</strong> 
@@ -198,12 +204,10 @@ HTML_TEMPLATE = """
             <div class="metric-title">Recommended Betting Tip:</div>
             <div id="res-pred" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green); margin-top: 4px;">-</div>
             
-            <!-- Restored Informed BTTS & Over/Under Markets -->
             <div id="btts-display" style="margin-top: 10px; font-size: 0.95rem; color: var(--accent-green); font-weight: 600;"></div>
             <div id="over-under-display" style="margin-top: 4px; font-size: 0.95rem; color: var(--accent-blue); font-weight: 600;"></div>
         </div>
 
-        <!-- Automated Affiliate Bookmaker Integration -->
         <div class="card" style="background: linear-gradient(135deg, #064e3b, #022c22);">
             <h3 style="color: #34d399; margin-top: 0; font-size: 1.1rem; text-align: center;">💰 Automated Affiliate Bookmaker Integration</h3>
             <div class="bookmaker-grid">
@@ -218,7 +222,6 @@ HTML_TEMPLATE = """
         </div>
     </div>
 
-    <!-- User Support Enquiry Section -->
     <div class="card" style="background-color: #172033; border: 1px solid var(--accent-blue);">
         <h3 style="color: var(--accent-blue); margin-top: 0; font-size: 1.1rem;">💬 Need Help or Have Feedback? Send an Enquiry</h3>
         <label>Your Email Address</label>
@@ -231,7 +234,6 @@ HTML_TEMPLATE = """
         </div>
     </div>
 
-    <!-- ================= FOOTER & LEGAL COMPLIANCE LINKS ================= -->
     <footer>
         <p style="margin-bottom: 10px;">&copy; 2026 Autonomous Sports Analytics & Aggregator. All rights reserved.</p>
         <p style="margin-bottom: 15px; font-size: 0.75rem; color: var(--text-muted);">
@@ -243,10 +245,8 @@ HTML_TEMPLATE = """
             <a onclick="openModal('termsModal')">Terms & Conditions</a>
         </div>
     </footer>
-    <!-- ================= END FOOTER ================= -->
 </div>
 
-<!-- ================= LEGAL MODALS ================= -->
 <div id="privacyModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal('privacyModal')">&times;</span>
@@ -282,7 +282,6 @@ HTML_TEMPLATE = """
         </p>
     </div>
 </div>
-<!-- ================= END MODALS ================= -->
 
 <script>
     const PROXY_URL = "/api/proxy?endpoint=";
@@ -294,7 +293,6 @@ HTML_TEMPLATE = """
         fetch('/api/track-visit', { method: 'POST' });
     });
 
-    // Modal Control Functions
     function openModal(modalId) {
         document.getElementById(modalId).style.display = "block";
     }
@@ -498,7 +496,6 @@ HTML_TEMPLATE = """
             document.getElementById('res-xg').textContent = `Home xG: ${data.home_xg} | Away xG: ${data.away_xg}`;
             document.getElementById('res-pred').textContent = data.prediction;
             
-            // Render BTTS & Over/Under directly under the recommendation box
             document.getElementById('btts-display').innerHTML = `Both Teams To Score (BTTS): ${data.bts_prediction}`;
             document.getElementById('over-under-display').innerHTML = `Over/Under Goals: ${data.over_under_prediction}`;
             
@@ -742,7 +739,6 @@ def predict():
         is_home_heavyweight = home_name.lower() in heavyweights
         is_away_heavyweight = away_name.lower() in heavyweights
 
-        # Fetch last 5 fixtures for Home Team
         home_form_res = requests.get(f"{BASE_URL}fixtures?team={home_id}&last=5", headers=headers).json()
         home_scored = 0
         home_conceded = 0
@@ -767,7 +763,6 @@ def predict():
             home_scored = 9
             home_conceded = 4
 
-        # Fetch last 5 fixtures for Away Team
         away_form_res = requests.get(f"{BASE_URL}fixtures?team={away_id}&last=5", headers=headers).json()
         away_scored = 0
         away_conceded = 0
@@ -792,7 +787,6 @@ def predict():
             away_scored = 6
             away_conceded = 7
 
-        # Fetch H2H matches between both teams
         h2h_res = requests.get(f"{BASE_URL}fixtures/headtohead?h2h={home_id}-{away_id}", headers=headers).json()
         h2h_matches = h2h_res.get('response', [])
         total_h2h = len(h2h_matches)
@@ -806,7 +800,6 @@ def predict():
             home_h2h_wins, away_h2h_wins = 0, 0
             h2h_summary = f"No prior recorded head-to-head matches found between {home_name} and {away_name}."
 
-        # Squad Quality Tier Weighting (Heavyweight status carries dominant influence)
         home_quality_score = 6.0 if is_home_heavyweight else 1.0
         away_quality_score = 6.0 if is_away_heavyweight else 1.0
 
@@ -815,7 +808,6 @@ def predict():
         home_defensive_rate = max(0.5, 3.0 - (home_conceded / 5.0))
         away_defensive_rate = max(0.5, 3.0 - (away_conceded / 5.0))
 
-        # Power calculation balancing squad tier quality against opponent metrics
         home_power = (home_quality_score * 4.0) + (home_scoring_rate * (away_conceded / 5.0)) + (home_defensive_rate * (3.0 - away_scoring_rate)) + (home_h2h_wins * 0.3)
         away_power = (away_quality_score * 4.0) + (away_scoring_rate * (home_conceded / 5.0)) + (away_defensive_rate * (3.0 - home_scoring_rate)) + (away_h2h_wins * 0.3)
 
@@ -826,7 +818,6 @@ def predict():
             confidence = min(94, int(75 + (away_power - home_power) * 5))
             winner_text = f"Projected Winner: {away_name} (Confidence: {confidence}% - Elite Squad Tier Quality & Superior Metrics)"
 
-        # Fully automated dynamic Over/Under and BTTS based strictly on metrics
         combined_expected_goals = home_scoring_rate + away_scoring_rate + (home_conceded / 5.0) + (away_conceded / 5.0)
         dynamic_line = round(1.5 + (combined_expected_goals * 0.15), 1)
 
